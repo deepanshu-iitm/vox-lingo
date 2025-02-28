@@ -3,12 +3,12 @@ import { MessageTypes } from './presets'
 
 class MyTranscriptionPipeline {
     static task = 'automatic-speech-recognition'
-    static model = 'Xenova/whisper-tiny.en'
+    static model = 'openai/whisper-tiny.en'
     static instance = null
 
     static async getInstance(progress_callback = null) {
         if (this.instance === null) {
-            this.instance = await pipeline(this.task, this.model, { progress_callback })
+            this.instance = await pipeline(this.task, null, { progress_callback })
         }
 
         return this.instance
@@ -28,14 +28,9 @@ async function transcribe(audio) {
     let pipeline
 
     try {
-        pipeline = await MyTranscriptionPipeline.getInstance(load_model_callback);
-        if (typeof pipeline !== 'function') {
-            throw new Error('Pipeline is not a function');
-        }
+        pipeline = await MyTranscriptionPipeline.getInstance(load_model_callback)
     } catch (err) {
-        console.error('Pipeline initialization error:', err.message);
-        sendLoadingMessage('error');
-        return;
+        console.log(err.message)
     }
 
     sendLoadingMessage('success')
@@ -85,8 +80,7 @@ class GenerationTracker {
         this.pipeline = pipeline
         this.stride_length_s = stride_length_s
         this.chunks = []
-        // this.time_precision = pipeline?.processor.feature_extractor.config.chunk_length / pipeline.model.config.max_source_positions
-        this.time_precision = pipeline?.processor?.feature_extractor?.config?.chunk_length / pipeline?.model?.config?.max_source_positions
+        this.time_precision = pipeline?.processor.feature_extractor.config.chunk_length / pipeline.model.config.max_source_positions
         this.processed_chunks = []
         this.callbackFunctionCounter = 0
     }
